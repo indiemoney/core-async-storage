@@ -3,7 +3,7 @@
             [cljs.core.async :refer [<!]]
             [glittershark.core-async-storage
              :refer [async-storage
-                     get-item multi-get set-item multi-set remove-item multi-remove clear]])
+                     get-item multi-get set-item multi-set remove-item multi-remove clear merge-item multi-merge]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn js-array-equals? [a1 a2]
@@ -121,4 +121,35 @@
 
         (done)))))
 
+(deftest merge-item-test
+  (async done
+    (go
+      (let [args (mock-storage-fn "mergeItem" #(% nil))]
+        (is (= [nil] (<! (merge-item :test {:foo "bar"})))
+            "returns potential errors in a core.async channel")
 
+        (is (= [[":test" "{:foo \"bar\"}"]] @args)
+            "converts the passed key and value to EDN before passing it to
+             AsyncStorage.mergeItem")
+
+        (is (= [nil] (<! (merge-item :test {:bar "foo"})))
+            "returns potential errors in a core.async channel #2")
+
+        (is (= [[":test" "{:foo \"bar\"}"] [":test" "{:bar \"foo\"}"]] @args)
+            "converts the passed key and value to EDN before passing it to
+             AsyncStorage.mergeItem #2")
+
+        (done)))))
+
+(deftest multi-merge-test
+  (async done
+    (go
+      (let [args (mock-storage-fn "multiMerge" #(% nil))]
+        (is (= [nil] (<! (multi-merge {:test {:foo "bar"}})))
+            "returns potential errors in a core.async channel")
+
+        (is (= [[[[":test" "{:foo \"bar\"}"]]]] (js->clj @args))
+            "converts the passed key and value to EDN before passing it to
+            AsyncStorage.multiMerge")
+
+        (done)))))

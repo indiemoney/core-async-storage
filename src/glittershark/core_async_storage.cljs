@@ -96,3 +96,21 @@
     :arglists '([key value])
     :added "1.0.0"}
   clear (method "clear"))
+
+(defcbfn
+  ^{:doc "Merges `value' with existing `key' value
+          and returns [error] in a core.async channel
+          upon completion, or [] if no error"
+    :arglists '([key value])
+    :added "1.0.0"}
+  merge-item (method "mergeItem")
+  :transform-args #(map pr-str %))
+
+(defcbfn
+  ^{:doc "Merges a `value' for each existing `key' value in a collection
+         and returns [error] in a core.async channel upon completion,
+         or [] if no error"
+    :arglists '([[key value]])
+    :added "1.2.0"}
+  multi-merge (method "multiMerge")
+  :transform-args (fn [c] (args->array (map #(map pr-str %) (first c)))))
